@@ -40,8 +40,9 @@ export const useImageUpload = (
     formData.append("image", file);
 
     try {
+      const springurl = process.env.NEXT_PUBLIC_SPRING_API;
       const response = await fetch(
-        "http://10.125.121.186:8080/api/upload/image",
+        `${springurl}/api/upload/image`,
         {
           method: "POST",
           body: formData,

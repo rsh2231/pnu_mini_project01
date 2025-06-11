@@ -1,6 +1,6 @@
 import { Comment, CommentDto } from "./commentType";
 
-const springurl = process.env.SPRING_API;
+const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
 export async function writeComment(dto: CommentDto) {
   const res = await fetch(`${springurl}/api/comment/write`, {

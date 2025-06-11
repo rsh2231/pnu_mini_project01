@@ -7,11 +7,12 @@ const EditPostPage = () => {
   const { id } = useParams();
   const router = useRouter();
   const [post, setPost] = useState({ title: "", content: "" });
+  const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
   useEffect(() => {
     // 기존 게시글 불러오기
     const fetchPost = async () => {
-      const res = await fetch(`http://10.125.121.186:8080/api/posts/${id}`);
+      const res = await fetch(`${springurl}/api/posts/${id}`);
       const data = await res.json();
       setPost({ title: data.title, content: data.content });
     };
@@ -19,7 +20,7 @@ const EditPostPage = () => {
   }, [id]);
 
   const handleUpdate = async () => {
-    const res = await fetch(`http://10.125.121.186:8080/api/posts/${id}`, {
+    const res = await fetch(`${springurl}/api/posts/${id}`, {
       method: "PUT", // 또는 PATCH
       headers: {
         "Content-Type": "application/json",

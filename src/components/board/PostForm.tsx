@@ -13,7 +13,7 @@ const PostForm: React.FC = () => {
 
   const { uploadAndInsertImage } = useImageUpload(content, setContent, contentRef);
 
-  const springurl = process.env.SPRING_API;
+  const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -60,17 +60,29 @@ const PostForm: React.FC = () => {
       return;
     }
 
+    const postPayload = {
+      caller: "next",
+      receiver: "spring",
+      status: 200,
+      method: "POST",
+      URL: "/api/posts",
+      message: "게시글 업로드",
+      content: {
+        dashboard: {
+          title,
+          content,
+        },
+      },
+    };
+
     try {
       const response = await fetch(`${springurl}/api/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // JWT 쿠키 포함
-        body: JSON.stringify({
-          title,
-          content,
-        }),
+        credentials: "include",
+        body: JSON.stringify(postPayload),
       });
 
       if (!response.ok) throw new Error("게시글 등록 실패");
@@ -79,7 +91,7 @@ const PostForm: React.FC = () => {
       setTitle("");
       setContent("");
       if (contentRef.current) contentRef.current.innerHTML = "";
-      router.push("/board"); // 게시글 목록 등으로 이동
+      router.push("/board");
     } catch (error) {
       alert("게시글 등록 실패");
       console.error(error);

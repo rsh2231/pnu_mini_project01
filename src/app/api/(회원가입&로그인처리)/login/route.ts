@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req:NextRequest) {
     const body = await req.json();
     console.log('라우터가 받은 바디 :',body)
-    const sptingurl = process.env.SPRING_API;
+    const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
+    
     try {
-        const res = await axios.post(`${sptingurl}/login`,body);
+        const res = await axios.post(`${springurl}/login`,body);
         const setCookieHeader = res.headers["set-cookie"];
         console.log('넥스트서버 디버깅 | 로그인 쿠키 헤더 추출:',setCookieHeader)
         const response = NextResponse.json(res.data, { status: 200 });

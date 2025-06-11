@@ -39,9 +39,9 @@ const BoardList = () => {
   const postsPerPage = 5;
 
   const router = useRouter();
-  const springurl = process.env.SPRING_API;
+  const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
-  // 총 게시글 수를 API에서 같이 받아온다고 가정
+  // 총 게시글 수 (서버에서 total 필드가 없으면 임시로 처리)
   const [totalPosts, setTotalPosts] = useState(0);
 
   const fetchPosts = useCallback(async () => {
@@ -49,7 +49,6 @@ const BoardList = () => {
     setError(null);
 
     try {
-      // 쿼리 파라미터 생성
       const params = new URLSearchParams();
       params.append("page", currentPage.toString());
       params.append("size", postsPerPage.toString());
@@ -70,11 +69,10 @@ const BoardList = () => {
         throw new Error("게시글 데이터를 불러오지 못했습니다.");
       }
 
-      // 예: API가 { posts: [...], total: 숫자 } 형태로 응답한다고 가정
       const data = await res.json();
 
-      // 서버 데이터 매핑
-      const mappedPosts = data.posts.map((item: any) => ({
+      // content.dashboards 배열을 매핑
+      const mappedPosts = data.content.dashboards.map((item: any) => ({
         id: item.dash_id,
         title: item.title,
         content: item.content,
@@ -83,7 +81,9 @@ const BoardList = () => {
       }));
 
       setPosts(mappedPosts);
-      setTotalPosts(data.total);
+
+      // 서버에서 total 필드가 없으면 dashboards 배열 길이로 임시 설정
+      setTotalPosts(data.content.total || mappedPosts.length);
     } catch (err: any) {
       setError(err.message || "오류가 발생했습니다.");
       setPosts([]);
@@ -93,12 +93,12 @@ const BoardList = () => {
     }
   }, [springurl, currentPage, postsPerPage, debouncedSearchTerm, selectedWriter, sortOption]);
 
-  // 조건이 바뀔 때마다 데이터 다시 요청
+  // 조건 변경 시 데이터 재요청
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // 검색어, 작성자, 정렬 변경 시 페이지 1로 초기화
+  // 검색어, 작성자, 정렬 변경 시 페이지 초기화
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearchTerm, selectedWriter, sortOption]);
@@ -129,7 +129,6 @@ const BoardList = () => {
           className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
         >
           <option value="전체">전체 작성자</option>
-          {/* 작성자 리스트는 서버에서 받아오거나 posts 상태에서 계산 가능 */}
           {[...new Set(posts.map((post) => post.writer))].map((writer) => (
             <option key={writer} value={writer}>
               {writer}

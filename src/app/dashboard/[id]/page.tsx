@@ -20,7 +20,7 @@ export default function PostDetail() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
-  const springurl = process.env.SPRING_API;
+  const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);

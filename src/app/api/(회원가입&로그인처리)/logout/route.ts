@@ -2,10 +2,10 @@ import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req:NextRequest) {
-    const sptingurl = process.env.SPRING_API;
+    const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
     
     try {
-        const res = await axios.post(`${sptingurl}/logout`,{},{withCredentials:true});
+        const res = await axios.post(`${springurl}/logout`,{},{withCredentials:true});
         const setCookieHeader = res.headers['set-cookie'];
         console.log('넥스트서버 디버깅 | 로그아웃 쿠키 헤더 추출:',setCookieHeader)
         const response=NextResponse.json({message:'로그아웃 성공'})

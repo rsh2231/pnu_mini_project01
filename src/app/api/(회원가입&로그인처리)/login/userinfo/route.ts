@@ -2,7 +2,7 @@ import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-    const springurl = process.env.SPRING_API;
+    const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
     const logname = "넥스트 서버 | api log | "
 
     try {
