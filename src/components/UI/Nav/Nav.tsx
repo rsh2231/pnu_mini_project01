@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Button01 from "@/components/etc/Button01";
 import LoginModal from "../Login/LoginModal";
+import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { Logininfo } from "@/type/logininfo";
 import { isLoginAtom } from "@/atoms/IsLoginAtom";
@@ -14,10 +15,13 @@ export default function Nav() {
   const [loginstate, setloginstate] = useAtom<Logininfo>(isLoginAtom);
 
   useEffect(() => {
+    const token = sessionStorage.getItem('JwtToken')
+    console.log(token)
     const getUserInfo = async () => {
       try {
-        const res = await axios.get('/api/login/userinfo', { withCredentials: true });
-        setloginstate(res.data);
+        const res = await axios.get('/api/login/userinfo', {headers : {'authorization':token},withCredentials:true});
+        console.log(res.data)
+        setloginstate({isLogin:'logged-in'});
       } catch (error: any) {
         console.error("유저 불러오기 실패 Nav : ", error.response?.data?.error);
       }
@@ -25,15 +29,12 @@ export default function Nav() {
     getUserInfo();
   }, []);
 
+  const router = useRouter();
+
   const handleLogout = async () => {
-    try {
-      const res = await axios.post('/api/logout', {}, { withCredentials: true });
-      if (res.status === 200) {
-        setloginstate({ isLogin: 'logged-out' });
-      }
-    } catch (error: any) {
-      console.error(error.response?.data?.error);
-    }
+    sessionStorage.removeItem('JwtToken')
+    setloginstate({isLogin:'logged-out'})
+    router.push("/"); // 로그아웃하면 홈으로 이동
   };
 
   return (
@@ -46,7 +47,7 @@ export default function Nav() {
 
           {loginstate.isLogin === "logged-in" && (
             <>          
-              <Link href="/about" className="hover:text-violet-400 transition-colors duration-300">페이지1</Link>
+              <Link href="/large-waste" className="hover:text-violet-400 transition-colors duration-300">대형폐기물</Link>
               <Link href="/dashboard" className="hover:text-violet-400 transition-colors duration-300">자유게시판</Link>
             </>
         )}

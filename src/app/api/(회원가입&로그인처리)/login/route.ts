@@ -1,4 +1,5 @@
 import axios from "axios";
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req:NextRequest) {
@@ -9,8 +10,8 @@ export async function POST(req:NextRequest) {
     try {
         const res = await axios.post(`${springurl}/login`,body);
         const setCookieHeader = res.headers["set-cookie"];
-        console.log('넥스트서버 디버깅 | 로그인 쿠키 헤더 추출:',setCookieHeader)
-        const response = NextResponse.json(res.data, { status: 200 });
+        console.log('넥스트서버 디버깅 | api/login:',res.headers)
+        const response = NextResponse.json(res.headers, { status: 200 });
         if (setCookieHeader) {
             
             if (Array.isArray(setCookieHeader)) {

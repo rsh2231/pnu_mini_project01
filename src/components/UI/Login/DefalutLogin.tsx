@@ -19,11 +19,18 @@ export default function DefalutLogin({ onclose }: { onclose: () => void }) {
       );
       if (response.status === 200) {
         setLoginSate({ isLogin: "logged-in" });
+        
+        console.log('디폴트 로그인 페이지',response.data.authorization)
+        const token = response.data.authorization
+        console.log(token)
+        sessionStorage.setItem("JwtToken",token)
+
         alert("로그인 성공");
         onclose();
-        window.location.href = "/";
+        // window.location.href = "/";
       }
     } catch (error: any) {
+      alert("로그인 실패");
       console.log(error.response?.data?.error);
       console.log(error.response);
     }

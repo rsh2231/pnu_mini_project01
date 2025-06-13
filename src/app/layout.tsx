@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         <div className="min-h-screen flex flex-col justify-between bg-gradient-to-br from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white font-sans">
           <Nav />
-          <main className="flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-8 pt-28 pb-20 gap-12">
+          <main className="w-full max-w-screen-lg mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 flex-grow">
             {children}
           </main>
           <footer className="text-sm text-gray-500 text-center dark:text-gray-400 mt-16">

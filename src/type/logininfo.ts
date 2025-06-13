@@ -8,4 +8,3 @@ export type Logininfo = {
     username?: string;
     enabled?: boolean;
 }
-

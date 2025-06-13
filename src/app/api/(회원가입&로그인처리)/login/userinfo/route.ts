@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
     const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
-    const logname = "넥스트 서버 | api log | "
-
+    const logname = "넥스트 서버 | api/login/userinfo | "
+    console.log('req.boy : ',req)
+    const token = req.headers.get("authorization") || ""
+    console.log('req.token : ',token)
     try {
-        const res = await axios.get(`${springurl}/loged-in/user`,{headers : {Cookie:req.headers.get('cookie') || ""}})
-        console.log(logname , "유저정보 쿠키",req.headers.get('cookie'))
-        // console.log(logname , "서버응당",res)
+        const res = await axios.get(`${springurl}/loged-in/user`,{headers : {'authorization':token}})
+        console.log(logname , "서버응답",res.data, res)
         return NextResponse.json( res.data, {status : 200});
     } catch (error:any) {
         

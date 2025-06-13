@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useState, useRef, FormEvent, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/app/api/useImageUpload";
 import Button01 from "@/components/etc/Button01";
-import { useRouter } from "next/navigation";
+
+interface User {
+  username: string;
+  nickname: string;
+}
 
 const PostForm: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -11,22 +16,42 @@ const PostForm: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const { uploadAndInsertImage } = useImageUpload(content, setContent, contentRef);
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  const { uploadAndInsertImage } = useImageUpload(
+    content,
+    setContent,
+    contentRef
+  );
 
   const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
-
-  // 로그인 상태 확인
+  // 로그인된 유저 정보 불러오기
   useEffect(() => {
-    fetch("/api/me", { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) throw new Error("not logged in");
-      })
-      .catch(() => {
-        alert("로그인 후 이용해주세요.");
-        router.push("/login");
-      });
+    async function fetchUser() {
+      try {
+        const res = await fetch(`${springurl}/loged-in/user`, {
+          credentials: "include",
+          headers: {
+            Authorization: sessionStorage.getItem("JwtToken") || "",
+          },
+        });
+        const data = await res.json();
+        const member = data.content?.member;
+        if (!member) throw new Error("유저 정보 없음");
+        console.log("username:", member.username);
+        console.log("nickname:", member.nickname);
+        setUser(member);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    }
+    fetchUser();
   }, []);
 
+  // 이미지 붙여넣기 시 처리
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     const items = e.clipboardData.items;
     for (const item of items) {
@@ -40,6 +65,7 @@ const PostForm: React.FC = () => {
     }
   };
 
+  // 이미지 드래그&드롭 처리
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -48,19 +74,31 @@ const PostForm: React.FC = () => {
     }
   };
 
+  // 본문 입력 내용 업데이트
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     setContent(e.currentTarget.innerHTML);
   };
 
+  // 게시글 제출
   const handleSubmit = async (e?: FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
+
+    if (loadingUser) {
+      alert("사용자 정보를 불러오는 중입니다.");
+      return;
+    }
+
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
 
     if (title.trim() === "" || content.trim() === "" || content === "<br>") {
       alert("제목과 본문을 모두 입력해주세요.");
       return;
     }
 
-    const postPayload = {
+    const payload = {
       caller: "next",
       receiver: "spring",
       status: 200,
@@ -71,27 +109,29 @@ const PostForm: React.FC = () => {
         dashboard: {
           title,
           content,
+          username: user.username,
+          nickname: user.nickname,
         },
       },
     };
 
     try {
-      const response = await fetch(`${springurl}/api/posts`, {
+      const response = await fetch(`${springurl}/api/post/insert`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(postPayload),
+        body: JSON.stringify(payload),
       });
-
+      console.log("response", response.json());
       if (!response.ok) throw new Error("게시글 등록 실패");
 
       alert("게시글이 등록되었습니다!");
       setTitle("");
       setContent("");
       if (contentRef.current) contentRef.current.innerHTML = "";
-      router.push("/board");
+      router.push("/dashboard");
     } catch (error) {
       alert("게시글 등록 실패");
       console.error(error);

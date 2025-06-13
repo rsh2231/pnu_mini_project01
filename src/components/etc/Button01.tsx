@@ -1,5 +1,6 @@
 'use client'
 import { MouseEvent } from "react";
+import styles from './Button01.module.css';
 
 type Button01Color = "blue" | "orange" | "lime";
 

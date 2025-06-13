@@ -1,95 +1,127 @@
 "use client";
-import React, { useState } from "react";
-import { writeComment } from "./commnetApi";
-import { CommentDto, DashBoard } from "./commentType";
 
-interface CommentFormProps {
-  dashBoard: DashBoard;
-  parent_id?: number | null;
-  depth?: number;
-  onCommentWritten: () => void;
+import React, { useState, useEffect, FormEvent } from "react";
+
+interface User {
+  username: string;
+  nickname: string;
 }
 
-export default function CommentForm({
-  dashBoard,
-  parent_id = null,
-  depth = 0,
-  onCommentWritten,
-}: CommentFormProps) {
-  const [form, setForm] = useState({
-    username: "",
-    nickname: "",
-    content: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
+interface CommentFormProps {
+  dashId: number; // 게시글 ID
+  parentId?: number | null; // 대댓글이면 부모 댓글 ID, 없으면 null
+  onCommentPosted?: () => void; // 댓글 등록 후 콜백
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+const CommentForm: React.FC<CommentFormProps> = ({
+  dashId,
+  parentId = null,
+  onCommentPosted,
+}) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [content, setContent] = useState("");
+  const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 로그인된 유저 정보 가져오기
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch(`${springurl}/loged-in/user`, {
+          credentials: "include",
+          headers: {
+            Authorization: sessionStorage.getItem("JwtToken") || "",
+          },
+        });
+        if (!res.ok) throw new Error("유저 정보 가져오기 실패");
+        const data = await res.json();
+        const member = data.content?.member;
+        if (!member) throw new Error("유저 정보 없음");
+        setUser(member);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    }
+    fetchUser();
+  }, [springurl]);
+
+  // 댓글 작성 제출
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const { username, nickname, content } = form;
-    if (!username.trim() || !nickname.trim() || !content.trim()) return;
+    if (loadingUser) {
+      alert("사용자 정보를 불러오는 중입니다.");
+      return;
+    }
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    if (content.trim() === "") {
+      alert("댓글 내용을 입력하세요.");
+      return;
+    }
 
-    const dto: CommentDto = {
-      dashBoard,
-      username,
-      nickname,
-      content,
-      parent_id,
-      depth,
+    // 백엔드에 맞는 payload 구조
+    const payload = {
+      caller: "next",
+      receiver: "spring",
+      status: 200,
+      method: "POST",
+      URL: "/api/comment/write",
+      message: "댓글 등록 요청",
+      content: {
+        comment: {
+          dash_id: dashId,
+          parent_id: parentId,
+          content: content.trim(),
+          username: user.username,
+          nickname: user.nickname,
+        },
+      },
     };
 
-    setSubmitting(true);
     try {
-      await writeComment(dto);
-      setForm({ username: "", nickname: "", content: "" });
-      onCommentWritten();
-    } catch (err: any) {
-      alert("댓글 작성 실패: " + err.message);
-    } finally {
-      setSubmitting(false);
+      const res = await fetch(`${springurl}/api/comment/write`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: sessionStorage.getItem("JwtToken") || "",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("댓글 등록 실패");
+      alert("댓글이 등록되었습니다!");
+      setContent("");
+      if (onCommentPosted) onCommentPosted(); // 부모 컴포넌트에 알려주기
+    } catch (error) {
+      alert("댓글 등록 실패");
+      console.error(error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 mt-2 bg-gray-50 dark:bg-gray-800 p-4 rounded shadow-sm">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          name="username"
-          placeholder="아이디"
-          value={form.username}
-          onChange={handleChange}
-          className="w-1/2 p-2 border rounded dark:bg-gray-700 dark:text-white"
-        />
-        <input
-          type="text"
-          name="nickname"
-          placeholder="닉네임"
-          value={form.nickname}
-          onChange={handleChange}
-          className="w-1/2 p-2 border rounded dark:bg-gray-700 dark:text-white"
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="w-full mt-4">
       <textarea
-        name="content"
-        placeholder={depth === 0 ? "댓글을 입력하세요" : "대댓글을 입력하세요"}
-        value={form.content}
-        onChange={handleChange}
-        className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-        rows={3}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="댓글을 입력하세요"
+        className="w-full p-3 border rounded resize-y dark:bg-gray-800 dark:text-white"
+        rows={4}
+        disabled={loadingUser || !user}
       />
       <button
         type="submit"
-        disabled={submitting}
-        className={`px-4 py-2 rounded text-white ${submitting ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
+        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+        disabled={loadingUser || !user}
       >
-        {submitting ? "작성 중..." : depth === 0 ? "댓글 작성" : "답글 작성"}
+        댓글 등록
       </button>
     </form>
   );
-}
+};
+
+export default CommentForm;

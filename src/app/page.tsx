@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useRef } from "react";
 import { useAtom } from "jotai";
@@ -14,29 +14,33 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl mx-auto px-4 sm:px-8 space-y-16">
-      {/* ✅ 타이틀 영역 (항상 노출) */}
-      <section className="text-center space-y-4 pt-10">
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-          부산 폐기물 자동 분류 서비스
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col items-center px-4 sm:px-6 md:px-8 py-12 space-y-16">
+      
+      {/* 타이틀 영역 */}
+      <section className="text-center space-y-6">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight drop-shadow-lg">
+          ♻ 부산 폐기물 자동 분류 시스템
         </h1>
-        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
-          폐기물 이미지를 업로드하면 종류를 자동으로 분류하고, <br />
-          지자체 신고 및 결제까지 간편하게 연결됩니다.
+        <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          폐기물 이미지를 업로드하면 종류를 자동 분류하고, <br />
+          지자체 신고와 결제를 간편하게 처리합니다.
         </p>
       </section>
 
+      {/* 로그인 시 업로드 영역 */}
       {loginstate.isLogin === 'logged-in' && (
-        <section className="w-1/2 flext flex-colmax-w-xl bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-8 space-y-6 border border-gray-100 dark:border-gray-700">
-          {/* 업로드 영역 */}
-          <div className="flex flex-col justify-center items-center">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-              이미지 업로드
+        <section className="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-8 backdrop-blur-md">
+          
+          {/* 이미지 업로드 */}
+          <div className="flex flex-col items-center gap-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white">
+              📷 이미지 업로드
             </h2>
+
             <form
               action="/"
               method="post"
-              className="flex flex-col sm:flex-row gap-4 items-center"
+              className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center"
             >
               <input
                 ref={fileInputRef}
@@ -44,17 +48,19 @@ export default function Home() {
                 name="file"
                 accept="image/*"
                 capture="environment"
-                style={{ display: "none" }}
+                className="hidden"
               />
+
               <button
                 onClick={onButtonClick}
-                className="w-full sm:w-auto bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-medium px-4 py-2 rounded-lg transition"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2 rounded-xl transition shadow-md hover:shadow-lg w-full sm:w-auto"
               >
                 사진 선택
               </button>
+
               <button
                 type="submit"
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-2 rounded-xl transition shadow-md hover:shadow-lg w-full sm:w-auto"
               >
                 업로드
               </button>
@@ -62,12 +68,15 @@ export default function Home() {
           </div>
 
           {/* 로그인 상태 정보 */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-sm space-y-2">
-            <p><span className="font-semibold">닉네임:</span> {loginstate.nickname}</p>
-            <p><span className="font-semibold">로그인 타입:</span> {loginstate.logintype}</p>
-            <p><span className="font-semibold">권한:</span> {loginstate.role}</p>
-            <p><span className="font-semibold">아이디:</span> {loginstate.username}</p>
-            <p><span className="font-semibold">상태:</span> 로그인됨</p>
+          <div className="bg-gray-700 p-5 sm:p-6 rounded-2xl text-sm space-y-2 shadow-inner">
+            <h3 className="text-base sm:text-lg font-bold mb-2">🔐 로그인 정보</h3>
+            <div className="space-y-1">
+              <p><span className="font-semibold text-gray-300">닉네임:</span> {loginstate.nickname}</p>
+              <p><span className="font-semibold text-gray-300">로그인 타입:</span> {loginstate.logintype}</p>
+              <p><span className="font-semibold text-gray-300">권한:</span> {loginstate.role}</p>
+              <p><span className="font-semibold text-gray-300">아이디:</span> {loginstate.username}</p>
+              <p><span className="font-semibold text-gray-300">상태:</span> 로그인됨</p>
+            </div>
           </div>
         </section>
       )}
