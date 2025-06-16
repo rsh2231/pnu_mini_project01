@@ -8,14 +8,7 @@ import Button01 from "@/components/etc/Button01";
 import CommentTree from "@/components/comments/CommentTree";
 import CommentForm from "@/components/comments/CommentForm";
 import { CommentDto } from "@/type/commentDto";
-
-interface Board {
-  id: number;
-  title: string;
-  content: string;
-  writer: string;
-  createDate: string;
-}
+import { dashBoard } from "@/type/dashborad";
 
 export default function PostDetail() {
   const router = useRouter();
@@ -23,7 +16,7 @@ export default function PostDetail() {
   const id = params?.id as string;
   const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
-  const [board, setBoard] = useState<Board | null>(null);
+  const [board, setBoard] = useState<dashBoard | null>(null);
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -39,7 +32,7 @@ export default function PostDetail() {
         console.log("게시글 응답:", data);
 
         const ds = data.content.dashboard;
-        const mappedData: Board = {
+        const mappedData: dashBoard = {
           id: ds.dash_id,
           title: ds.title,
           content: ds.content,
@@ -89,32 +82,24 @@ export default function PostDetail() {
 
   const handleDelete = async () => {
     if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
-    setDeleting(true);
 
+    setDeleting(true);
     try {
       const res = await fetch(`${springurl}/api/post/delete?dashId=${id}`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(
-          {
-            content: {
-              dashboard: {
-                dashId: Number(id)
-              }
-            }
-          }
-        )
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: { dashboard: { dashId: Number(id) } },
+        }),
       });
-      console.log("삭제", res.json())
-      if (!res.ok) {
-        throw new Error(`삭제 실패 (status: ${res.status})`);
-      }
+      if (!res.ok) throw new Error("삭제 실패");
 
       alert("게시글이 삭제되었습니다.");
       router.push("/dashboard");
     } catch (error) {
+      console.error("삭제 중 오류 발생:", error);
       alert("삭제 중 오류가 발생했습니다.");
-      console.error(error);
+    } finally {
       setDeleting(false);
     }
   };

@@ -2,49 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useFetchUser } from "@/hooks/useFetchUser";
 
-interface User {
-  username: string;
-  nickname: string;
-}
+
+const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
 const EditPostPage = () => {
   const { id } = useParams();
   const router = useRouter();
   const [post, setPost] = useState({ title: "", content: "" });
-  const springurl = process.env.NEXT_PUBLIC_SPRING_URL;
 
-  const [user, setUser] = useState<User | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-
-  // 로그인된 유저 정보 불러오기
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch(`${springurl}/loged-in/user`, {
-          credentials: "include",
-          headers: {
-            Authorization: sessionStorage.getItem("JwtToken") || "",
-          },
-        });
-        const data = await res.json();
-        const member = data.content?.member;
-        if (!member) throw new Error("유저 정보 없음");
-        setUser(member);
-      } catch {
-        setUser(null);
-      } finally {
-        setLoadingUser(false);
-      }
-    }
-    fetchUser();
-  }, []);
+  const { user, loading: loadingUser } = useFetchUser();
 
   // 게시글 불러오기
   useEffect(() => {
+    if (!id) return;
+
     const fetchPost = async () => {
       try {
         const res = await fetch(`${springurl}/api/post/${id}`);
+        if (!res.ok) throw new Error("게시글 요청 실패");
+
         const data = await res.json();
         const ds = data.content.dsboard;
         setPost({ title: ds.title, content: ds.content });
@@ -53,24 +31,23 @@ const EditPostPage = () => {
         console.error(error);
       }
     };
+
     fetchPost();
   }, [id]);
 
   const handleUpdate = async () => {
-    if (loadingUser) {
-      alert("사용자 정보를 불러오는 중입니다.");
-      return;
-    }
+    if (loadingUser) return alert("사용자 정보를 불러오는 중입니다.");
     if (!user) {
       alert("로그인이 필요합니다.");
       router.push("/src/components/UI/Login/LoginModal.tsx")
+      return;
     }
 
     const payload = {
       caller: "next",
       receiver: "spring",
       status: 200,
-      method: "PUT",
+      method: "POST",
       URL: `/api/posts/${id}`,
       message: "게시글 수정 요청",
       content: {
@@ -94,14 +71,12 @@ const EditPostPage = () => {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        alert("수정되었습니다.");
-        router.push(`/dashboard/${id}`);
-      } else {
-        alert("수정 실패");
-      }
+      if (!res.ok) throw new Error("수정 실패");
+
+      alert("수정되었습니다.");
+      router.push(`/dashboard/${id}`);
     } catch (err) {
-      alert("오류 발생");
+      alert("수정 중 오류 발생");
       console.error(err);
     }
   };
